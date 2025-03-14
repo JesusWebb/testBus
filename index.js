@@ -91,12 +91,15 @@ let lines = [
 app.use(requestLogger);
 
 app.get(`${ baseURL }/`, (request, response) => {
-  response.send('<h1>Hello World!</h1>')
+  response
+    .send('<h1>Hello World!</h1>')
 })
 
 app.get(`${ baseURL }/lines`, (request, response, next) => {
-  response.json(lines);
-  next(); // Llamar a next() para que pase al siguiente middleware
+  response
+    .json(lines);
+
+  next();
 }, testFin);
 
 app.get(`${ baseURL }/lines/:id`, (request, response) => {
@@ -104,7 +107,8 @@ app.get(`${ baseURL }/lines/:id`, (request, response) => {
   const line = lines.find((line) => line.id === id)
 
   if (line) {
-    response.json(line)
+    response
+      .json(line)
   } else {
     response
       .status(404)
@@ -139,11 +143,11 @@ app.post(`${ baseURL }/lines`, (request, response) => {
 
 app.delete(`${ baseURL }/lines/:id`, (request, response) => {
   const id = Number(request.params.id)
-  const linesAll = lines.filter((line) => line.id === id)
+  const lineDelete = lines.find((line) => line.id === id)
 
   response
     .status(204)
-    .end()
+    .json(lineDelete)
 })
 
 app.use(unknownEndpoint)
