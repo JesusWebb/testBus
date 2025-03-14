@@ -116,6 +116,31 @@ app.get(`${ baseURL }/lines/:id`, (request, response) => {
   }
 })
 
+app.put(`${ baseURL }/lines/:id`, (request, response) => {
+  const { body } = request
+  const { id, trasbordo } = body
+
+  if (!id) {
+    return response
+      .status(400)
+        .json({ 
+          error: 'No hay ID' 
+        })
+  }
+
+  const lineIndex = lines.findIndex((line) => line.id === id);
+  if (lineIndex === -1) {
+    return response
+      .status(404)
+      .json({ error: "Linea no encontrada" });
+  }
+  lines[lineIndex].trasbordo = trasbordo;
+
+  response
+    .status(204)
+    .end();
+})
+
 app.post(`${ baseURL }/lines`, (request, response) => {
   const { body } = request
   const { id } = body
