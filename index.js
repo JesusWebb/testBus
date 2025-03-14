@@ -117,8 +117,9 @@ app.get(`${ baseURL }/lines/:id`, (request, response) => {
 })
 
 app.put(`${ baseURL }/lines/:id`, (request, response) => {
+  const id = Number(request.params.id)
   const { body } = request
-  const { id, trasbordo } = body
+  const { trasbordo } = body
 
   if (!id) {
     return response
