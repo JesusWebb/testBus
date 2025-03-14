@@ -142,12 +142,19 @@ app.post(`${ baseURL }/lines`, (request, response) => {
 })
 
 app.delete(`${ baseURL }/lines/:id`, (request, response) => {
-  const id = Number(request.params.id)
-  const lineDelete = lines.find((line) => line.id === id)
+  const id = Number(request.params.id);
+  const lineIndex = lines.findIndex((line) => line.id === id);
 
+  if (lineIndex !== -1) {
+    return response
+      .status(404)
+      .json({ error: "Linea no encontrada" });
+  }
+
+  lines.splice(lineIndex, 1);
   response
     .status(204)
-    .json(lineDelete)
+    .end();
 })
 
 app.use(unknownEndpoint)
