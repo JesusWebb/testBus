@@ -133,9 +133,8 @@ app.post(`${ baseURL }/lines`, (request, response) => {
         })
   }
 
-  lines = lines.concat(body)
   response
-    .json(lines)
+    .json(body)
 })
 
 app.delete(`${ baseURL }/lines/:id`, (request, response) => {
