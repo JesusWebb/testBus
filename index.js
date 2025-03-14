@@ -1,11 +1,16 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
+
+const Line = require('./models/line')
+const Parada = require('./models/parada')
 
 const app = express()
 
 app.use(cors())
-app.use(express.json());
 app.use(express.static('dist'))
+app.use(express.json());
+
 
 const baseURL = '/api/v1'
 
@@ -30,66 +35,19 @@ const unknownEndpoint = (request, response) => {
     .send({ error: 'Endpoint Desconocido' })
 }
 
-let lines = [
-  {
-    "id": 1,
-    "number": "1",
-    "active": true,
-    "trasbordo": false,
-    "zone": "Avenida vieja"
-  },
-  {
-    "id": 2,
-    "number": "2",
-    "active": true,
-    "trasbordo": false,
-    "zone": "Centro"
-  },
-  {
-    "id": 3,
-    "number": "3",
-    "active": true,
-    "trasbordo": true,
-    "zone": "Barriada de la paz"
-  },
-  {
-    "id": 4,
-    "number": "4",
-    "active": false,
-    "trasbordo": false,
-    "zone": "Astillero 1"
-  },
-  {
-    "id": 5,
-    "number": "5",
-    "active": true,
-    "trasbordo": false,
-    "zone": "Avenida nueva"
-  },
-  {
-    "id": 6,
-    "number": "6",
-    "active": false,
-    "trasbordo": false,
-    "zone": "Astillero 2"
-  },
-  {
-    "id": 7,
-    "number": "7",
-    "active": true,
-    "trasbordo": true,
-    "zone": "Playa"
-  },
-  {
-    "id": 8,
-    "number": "8",
-    "active": true,
-    "trasbordo": true,
-    "zone": "Playa"
-  }
-]
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
 
-app.use(requestLogger);
+  if (error.name === 'CastError') {
+    return response
+      .status(400)
+      .send({ error: 'malformatted id' })
+  }
+
+  return response
+      .status(400)
+      .send({ error: `'another err' ${ error }` })
+}
 
 app.get(`${ baseURL }/`, (request, response) => {
   response
@@ -97,27 +55,50 @@ app.get(`${ baseURL }/`, (request, response) => {
 })
 
 app.get(`${ baseURL }/lines`, (request, response, next) => {
-  response
-    .json(lines);
+  Line
+    .find({})
+    .then((lines) => {
+      if (lines) {
+        response
+          .json(lines)
+      } else {
+        response
+          .status(404)
+          .send({ error: 'Lines not found' })
+      }
+    })
+    .catch((error) => next(error))
 
   next();
 }, testFin);
 
-app.get(`${ baseURL }/lines/:id`, (request, response) => {
+app.get(`${ baseURL }/lines/:id`, (request, response, next) => {
   const id = Number(request.params.id)
-  const line = lines.find((line) => line.id === id)
-
-  if (line) {
-    response
-      .json(line)
-  } else {
-    response
-      .status(404)
-      .end()
-  }
+  
+  // const line = lines.find((line) => line.id === id)
+  // if (line) {
+  //   response
+  //     .json(line)
+  // } else {
+  //   response
+  //     .status(404)
+  //     .end()
+  // }
+  Line.find({ id: id })
+    .then((line) => {
+      if (line) {
+        response
+          .json(line)
+      } else {
+        response
+          .status(404)
+          .send({ error: 'Id not found' })
+      }
+    })
+    .catch((error) => next(error))
 })
 
-app.put(`${ baseURL }/lines/:id`, (request, response) => {
+app.put(`${ baseURL }/lines/:id`, (request, response, next) => {
   const id = Number(request.params.id)
   const { body } = request
   const { trasbordo } = body
@@ -125,67 +106,96 @@ app.put(`${ baseURL }/lines/:id`, (request, response) => {
   if (!id) {
     return response
       .status(400)
-        .json({ 
-          error: 'No hay ID' 
-        })
+      .send({ error: 'Id not found' })
   }
 
-  const lineIndex = lines.findIndex((line) => line.id === id);
-  if (lineIndex === -1) {
-    return response
-      .status(404)
-      .json({ error: "Linea no encontrada" });
-  }
-  lines[lineIndex].trasbordo = trasbordo;
+  // const lineIndex = lines.findIndex((line) => line.id === id);
+  // if (lineIndex === -1) {
+  //   return response
+  //     .status(404)
+  //     .json({ error: "Linea no encontrada" });
+  // }
+  // lines[lineIndex].trasbordo = trasbordo;
 
-  response
-    .status(204)
-    .end();
+  // response
+  //   .status(204)
+  //   .end();
+
+  Line.findOneAndUpdate( { id: id }, { trasbordo }, { new: true, runValidators: true })
+    .then((updatedLine) => {
+      if (!updatedLine) {
+        return response
+          .status(404)
+          .send({ error: 'Lines not found' })
+      }
+      response
+        .json(updatedLine);
+    })
+    .catch((error) => next(error))
 })
 
-app.post(`${ baseURL }/lines`, (request, response) => {
+app.post(`${ baseURL }/lines`, (request, response, next) => {
   const { body } = request
   const { id } = body
 
   if (!id) {
     return response
       .status(400)
-        .json({ 
-          error: 'No hay ID' 
-        })
+      .send({ error: 'Id not found' })
   }
 
-  const isLines = lines.some((line) => line.id === Number(id))
-  if (isLines) {
-    return response
-      .status(400)
-        .json({ 
-          error: 'Ya existe Linea' 
-        })
-  }
+  // const isLines = lines.some((line) => line.id === Number(id))
+  // if (isLines) {
+  //   return response
+  //     .status(400)
+  //       .json({ 
+  //         error: 'Ya existe Linea' 
+  //       })
+  // }
 
-  lines = lines.concat(body)
-  response
-    .json(body)
+  const line = new Line(body)
+  line
+    .save()
+    .then((savedLine) => {
+      response
+        .json(savedLine)
+    })
+    .catch((error) => next(error))
 })
 
-app.delete(`${ baseURL }/lines/:id`, (request, response) => {
-  const id = Number(request.params.id);
-  const lineIndex = lines.findIndex((line) => line.id === id);
+app.delete(`${ baseURL }/lines/:id`, (request, response, next) => {
+  const id = Number(request.params.id); 
+  // const lineIndex = lines.findIndex((line) => line.id === id);
 
-  if (lineIndex === -1) {
-    return response
-      .status(404)
-      .json({ error: "Linea no encontrada" });
-  }
+  // if (lineIndex === -1) {
+  //   return response
+  //     .status(404)
+  //     .json({ error: "Linea no encontrada" });
+  // }
 
-  lines.splice(lineIndex, 1);
-  response
-    .status(204)
-    .end();
+  // lines.splice(lineIndex, 1);
+  // response
+  //   .status(204)
+  //   .end();
+
+  console.log(id)
+  Line.findOneAndDelete({ id: id })
+    .then((result) => {
+      if (!result) {
+        return response
+          .status(404)
+          .send({ error: 'Linea not found' })
+      }
+      response
+        .status(204)
+        .end()
+    })
+    .catch((error) => next(error))
 })
 
+app.use(requestLogger);
 app.use(unknownEndpoint)
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {

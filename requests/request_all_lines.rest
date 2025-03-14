@@ -12,5 +12,9 @@ POST  http://localhost:3001/api/v1/lines
 Content-Type: application/json
 
 {
-  "id" : 8
+  "id" : 10,
+  "number": "10",
+  "active": true,
+  "trasbordo": false,
+  "zone": "TEST"
 }
