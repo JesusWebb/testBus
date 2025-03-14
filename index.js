@@ -137,6 +137,7 @@ app.post(`${ baseURL }/lines`, (request, response) => {
         })
   }
 
+  lines = lines.concat(body)
   response
     .json(body)
 })
@@ -145,7 +146,7 @@ app.delete(`${ baseURL }/lines/:id`, (request, response) => {
   const id = Number(request.params.id);
   const lineIndex = lines.findIndex((line) => line.id === id);
 
-  if (lineIndex !== -1) {
+  if (lineIndex === -1) {
     return response
       .status(404)
       .json({ error: "Linea no encontrada" });
