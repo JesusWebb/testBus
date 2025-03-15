@@ -32,7 +32,7 @@ const testFin = (request, response, next) => {
 const unknownEndpoint = (request, response) => {
   response
     .status(404)
-    .send({ error: 'Endpoint Desconocido' })
+    .json({ error: 'Endpoint Desconocido' })
 }
 
 const errorHandler = (error, request, response, next) => {
@@ -41,12 +41,16 @@ const errorHandler = (error, request, response, next) => {
   if (error.name === 'CastError') {
     return response
       .status(400)
-      .send({ error: 'malformatted id' })
+      .json({ error: 'malformatted id' })
+  } else if (error.name === 'ValidationError') {
+    return response
+      .status(400)
+      .json({ error: error.message })
   }
 
   return response
       .status(400)
-      .send({ error: `'another err' ${ error }` })
+      .json({ error: `'another err' ${ error }` })
 }
 
 app.get(`${ baseURL }/`, (request, response) => {
@@ -64,7 +68,7 @@ app.get(`${ baseURL }/lines`, (request, response, next) => {
       } else {
         response
           .status(404)
-          .send({ error: 'Lines not found' })
+          .json({ error: 'Lines not found' })
       }
     })
     .catch((error) => next(error))
@@ -92,7 +96,7 @@ app.get(`${ baseURL }/lines/:id`, (request, response, next) => {
       } else {
         response
           .status(404)
-          .send({ error: 'Id not found' })
+          .json({ error: 'Id not found' })
       }
     })
     .catch((error) => next(error))
@@ -106,7 +110,7 @@ app.put(`${ baseURL }/lines/:id`, (request, response, next) => {
   if (!id) {
     return response
       .status(400)
-      .send({ error: 'Id not found' })
+      .json({ error: 'Id not found' })
   }
 
   // const lineIndex = lines.findIndex((line) => line.id === id);
@@ -126,7 +130,7 @@ app.put(`${ baseURL }/lines/:id`, (request, response, next) => {
       if (!updatedLine) {
         return response
           .status(404)
-          .send({ error: 'Lines not found' })
+          .json({ error: 'Lines not found' })
       }
       response
         .json(updatedLine);
@@ -141,7 +145,7 @@ app.post(`${ baseURL }/lines`, (request, response, next) => {
   if (!id) {
     return response
       .status(400)
-      .send({ error: 'Id not found' })
+      .json({ error: 'Id not found' })
   }
 
   // const isLines = lines.some((line) => line.id === Number(id))
@@ -184,7 +188,7 @@ app.delete(`${ baseURL }/lines/:id`, (request, response, next) => {
       if (!result) {
         return response
           .status(404)
-          .send({ error: 'Linea not found' })
+          .json({ error: 'Linea not found' })
       }
       response
         .status(204)

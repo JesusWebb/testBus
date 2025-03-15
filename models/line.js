@@ -13,12 +13,21 @@ mongoose.connect(url)
   })
 
 const lineSchema = new mongoose.Schema({
-  id: Number,
-  number: String,
-  active: Boolean,
+  id: {
+    type: Number,
+    required: true
+  },
+  number: {
+    type: String,
+    required: true
+  },
+  active: {
+    type: Boolean,
+    required: true
+  },
   trasbordo: Boolean,
   zone: String
-})
+});
 lineSchema.set('toJSON', {
   transform: (document, returnedObject) => {
     returnedObject.id = returnedObject._id.toString()
@@ -26,5 +35,8 @@ lineSchema.set('toJSON', {
     delete returnedObject.__v
   }
 })
+
+
+
 
 module.exports = mongoose.model('Line', lineSchema)
